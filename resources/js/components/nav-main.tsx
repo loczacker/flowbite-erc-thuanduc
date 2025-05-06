@@ -5,12 +5,12 @@ import { HrMenu } from '@/components/nav/HrMenu';
 import { Link, usePage } from '@inertiajs/react';
 
 export function NavMain() {
-    const { url } = usePage(); // Lấy URL hiện tại
+    const { url } = usePage();
 
     return (
         <div>
             {/* Dashboard */}
-            <SidebarGroup className="px-2  py-1">
+            <SidebarGroup className="px-2 py-1">
                 <SidebarGroupLabel className="pl-0">Dashboard</SidebarGroupLabel>
                 <SidebarMenu className="mt-1">
                     <SidebarMenuItem>
@@ -19,13 +19,13 @@ export function NavMain() {
                             isActive={url === '/dashboard'}
                         >
                             <Link href="/dashboard" prefetch className="flex items-center gap-2 text-sm font-medium">
-                                <span className=''>Dashboard</span>
+                                <span>Dashboard</span>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarGroup>
-            
+
             {/* Organization */}
             <SidebarGroup className="px-2 py-1">
                 <SidebarGroupLabel className="pl-0">Organization</SidebarGroupLabel>

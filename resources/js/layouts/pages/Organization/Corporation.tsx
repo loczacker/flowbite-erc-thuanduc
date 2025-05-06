@@ -1,3 +1,5 @@
+import AppLayout from '@/layouts/app-layout';
+
 export default function CorporationsPage() {
   return (
     <div className="p-6">
@@ -6,3 +8,8 @@ export default function CorporationsPage() {
     </div>
   );
 }
+
+// Gắn layout
+CorporationsPage.layout = (page: React.ReactNode) => (
+  <AppLayout>{page}</AppLayout>
+);
