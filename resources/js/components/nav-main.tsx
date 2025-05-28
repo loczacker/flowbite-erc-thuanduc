@@ -3,6 +3,7 @@ import { EsgMenu } from '@/components/nav/EsgMenu';
 import { OrganizationMenu } from '@/components/nav/OrganizationMenu';
 import { HrMenu } from '@/components/nav/HrMenu';
 import { Link, usePage } from '@inertiajs/react';
+import { DocumentMenu } from './nav/DocumentMenu';
 
 export function NavMain() {
     const { url } = usePage();
@@ -11,7 +12,7 @@ export function NavMain() {
         <div>
             {/* Dashboard */}
             <SidebarGroup className="px-2 py-1">
-                <SidebarGroupLabel className="pl-0">Dashboard</SidebarGroupLabel>
+                {/* <SidebarGroupLabel className="pl-0">Dashboard</SidebarGroupLabel> */}
                 <SidebarMenu className="mt-1">
                     <SidebarMenuItem>
                         <SidebarMenuButton
@@ -28,7 +29,7 @@ export function NavMain() {
 
             {/* Organization */}
             <SidebarGroup className="px-2 py-1">
-                <SidebarGroupLabel className="pl-0">Organization</SidebarGroupLabel>
+                {/* <SidebarGroupLabel className="pl-0">Organization</SidebarGroupLabel> */}
                 <SidebarMenu className="mt-1">
                     <OrganizationMenu />
                 </SidebarMenu>
@@ -36,7 +37,15 @@ export function NavMain() {
 
             {/* Human Resources */}
             <SidebarGroup className="px-2 py-1">
-                <SidebarGroupLabel className="pl-0">Human Resources</SidebarGroupLabel>
+                {/* <SidebarGroupLabel className="pl-0">Human Resources</SidebarGroupLabel> */}
+                <SidebarMenu className="mt-1">
+                    <DocumentMenu/>
+                </SidebarMenu>
+            </SidebarGroup>
+
+            {/* Document Management */}
+            <SidebarGroup className="px-2 py-1">
+                {/* <SidebarGroupLabel className="pl-0">Document Management</SidebarGroupLabel> */}
                 <SidebarMenu className="mt-1">
                     <HrMenu />
                 </SidebarMenu>
@@ -44,11 +53,13 @@ export function NavMain() {
 
             {/* ESG Management */}
             <SidebarGroup className="px-2 py-1">
-                <SidebarGroupLabel className="pl-0">ESG Management</SidebarGroupLabel>
+                {/* <SidebarGroupLabel className="pl-0">ESG Management</SidebarGroupLabel> */}
                 <SidebarMenu className="mt-1">
                     <EsgMenu />
                 </SidebarMenu>
             </SidebarGroup>
+
+
         </div>
     );
 }
