@@ -59,7 +59,6 @@ export function NavMain() {
                 </SidebarMenu>
             </SidebarGroup>
 
-
         </div>
     );
 }
