@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-
 
 class DocumentController extends Controller
 {
@@ -25,23 +23,24 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'file' => 'required|file|max:10240', // max 10MB
+            'file_path' => 'required|string|max:2048', // Đường dẫn nội bộ
         ]);
 
-        $path = $request->file('file')->store('documents', 'public');
-
-        $document = Document::create([
+        Document::create([
             'title' => $request->title,
-            'file_path' => $path,
+            'file_path' => $request->file_path,
         ]);
 
-        return redirect()->route('documents.create')->with([
-            'fileUrl' => Storage::url($path),
-            'message' => 'Tài liệu đã được tải lên thành công!',
-        ]);
+        return redirect()->route('documents.create')->with('message', 'Đã thêm tài liệu thành công!');
+    }
+
+    public function destroy(Document $document)
+    {
+        $document->delete();
+        return redirect()->route('documents.create')->with('message', 'Đã xoá tài liệu.');
     }
 }

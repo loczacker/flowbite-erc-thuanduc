@@ -1,9 +1,8 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
 import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -18,41 +17,31 @@ type DocumentItem = {
 };
 
 export default function DocumentCreate() {
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
-    file: null as File | null,
+    file_path: '',
   });
-
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setData('file', file ?? null);
-
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPreview(null);
-    }
-  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    post('/documents');
+    post('/documents', {
+      onSuccess: () => reset(),
+    });
   };
 
-  // 🟩 Nhận dữ liệu từ controller
   const { props } = usePage<{
-    fileUrl?: string;
     message?: string;
     documents?: DocumentItem[];
   }>();
 
-  const fileUrl = props.fileUrl;
   const message = props.message;
   const documents = props.documents ?? [];
+
+  const handleDelete = (id: number) => {
+    if (confirm('Bạn có chắc chắn muốn xoá?')) {
+      router.delete(`/documents/${id}`);
+    }
+  };
 
   return (
     <>
@@ -73,23 +62,15 @@ export default function DocumentCreate() {
           </div>
 
           <div>
-            <Label htmlFor="file">Tệp tài liệu</Label>
+            <Label htmlFor="file_path">Đường dẫn file</Label>
             <Input
-              id="file"
-              type="file"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
-              onChange={handleFileChange}
+              id="file_path"
+              value={data.file_path}
+              onChange={(e) => setData('file_path', e.target.value)}
               className="mt-1"
             />
-            {errors.file && <p className="text-red-600 text-sm">{errors.file}</p>}
+            {errors.file_path && <p className="text-red-600 text-sm">{errors.file_path}</p>}
           </div>
-
-          {preview && (
-            <div>
-              <Label>Xem trước</Label>
-              <img src={preview} alt="Preview" className="max-w-xs rounded border mt-2" />
-            </div>
-          )}
 
           <Button type="submit" disabled={processing}>
             Lưu Tài liệu
@@ -99,18 +80,9 @@ export default function DocumentCreate() {
         {message && (
           <div className="p-4 bg-green-100 border border-green-300 text-green-800 rounded mt-4">
             {message}
-            {fileUrl && (
-              <div className="mt-2 text-sm break-all">
-                Đường dẫn:{" "}
-                <a href={fileUrl} target="_blank" className="text-blue-600 underline">
-                  {fileUrl}
-                </a>
-              </div>
-            )}
           </div>
         )}
 
-        {/* 🟩 Hiển thị bảng danh sách tài liệu */}
         {documents.length > 0 && (
           <div className="mt-10">
             <h2 className="text-xl font-semibold mb-4">Danh sách Tài liệu</h2>
@@ -120,6 +92,7 @@ export default function DocumentCreate() {
                   <th className="border p-2">#</th>
                   <th className="border p-2 text-left">Tiêu đề</th>
                   <th className="border p-2 text-left">Tệp</th>
+                  <th className="border p-2">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,10 +100,23 @@ export default function DocumentCreate() {
                   <tr key={doc.id} className="border-t">
                     <td className="border p-2 text-center">{index + 1}</td>
                     <td className="border p-2">{doc.title}</td>
-                    <td className="border p-2">
-                      <a href={doc.file_path} target="_blank" className="text-blue-600 underline">
-                        Xem tài liệu
+                    <td className="border p-2 break-all text-blue-700 underline">
+                      <a
+                        href={`file:///${doc.file_path.replace(/\\/g, '/')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {doc.file_path}
                       </a>
+                    </td>
+                    <td className="border p-2 text-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(doc.id)}
+                      >
+                        Xoá
+                      </Button>
                     </td>
                   </tr>
                 ))}
