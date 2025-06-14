@@ -7,7 +7,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -80,17 +84,10 @@ export default function IndicatorsPage() {
     <>
       <Head title="Chỉ số ESG" />
       <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Chỉ số ESG
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Chỉ số ESG</h1>
 
-        {/* Mô tả */}
+        {/* Form nhập liệu */}
         <div className="bg-white dark:bg-gray-900 shadow rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Danh sách các chỉ số đánh giá ESG.
-          </p>
-
-          {/* Form thêm/sửa */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <Input name="name" value={form.name} onChange={handleChange} placeholder="Tên chỉ số" />
             <Input name="unit" value={form.unit} onChange={handleChange} placeholder="Đơn vị" />
@@ -106,7 +103,7 @@ export default function IndicatorsPage() {
             </div>
           </div>
 
-          {/* Bộ lọc cột */}
+          {/* Bộ lọc */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <Input name="name" value={filters.name} onChange={handleFilterChange} placeholder="Lọc theo tên chỉ số" />
             <Input name="unit" value={filters.unit} onChange={handleFilterChange} placeholder="Lọc theo đơn vị" />
@@ -149,6 +146,42 @@ export default function IndicatorsPage() {
               </TableBody>
             </Table>
           </div>
+        </div>
+
+        {/* Thống kê danh mục */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <CardTitle className="flex items-center gap-2">
+                🌿 Environmental
+              </CardTitle>
+              <CardDescription>Các chỉ số môi trường và phát triển bền vững</CardDescription>
+              <div className="mt-4 text-sm text-muted-foreground">Hoạt động</div>
+              <div className="text-lg font-semibold text-green-600">85%</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <CardTitle className="flex items-center gap-2">
+                👥 Social
+              </CardTitle>
+              <CardDescription>Các yếu tố xã hội và trách nhiệm với cộng đồng</CardDescription>
+              <div className="mt-4 text-sm text-muted-foreground">Hoạt động</div>
+              <div className="text-lg font-semibold text-blue-600">72%</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <CardTitle className="flex items-center gap-2">
+                🏛 Governance
+              </CardTitle>
+              <CardDescription>Quản trị doanh nghiệp và tuân thủ pháp luật</CardDescription>
+              <div className="mt-4 text-sm text-muted-foreground">Hoạt động</div>
+              <div className="text-lg font-semibold text-purple-600">60%</div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>
