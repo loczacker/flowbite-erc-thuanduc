@@ -8,7 +8,11 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea'; // sửa import
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { Badge } from '@/components/ui/badge';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -23,12 +27,14 @@ type ESGCategory = {
   description?: string | null;
 };
 
-export default function CategoriesPage() {
-  const [categories, setCategories] = useState<ESGCategory[]>([
-    { id: 1, name: 'Môi trường', description: 'Các vấn đề liên quan đến môi trường' },
-    { id: 2, name: 'Xã hội', description: 'Vấn đề xã hội và cộng đồng' },
-  ]);
+const FIXED_CATEGORIES: ESGCategory[] = [
+  { id: 1, name: 'Môi trường', description: 'Các vấn đề liên quan đến môi trường' },
+  { id: 2, name: 'Xã hội', description: 'Vấn đề xã hội và cộng đồng' },
+  { id: 3, name: 'Quản trị', description: 'Quản trị doanh nghiệp và tuân thủ pháp luật' },
+];
 
+export default function CategoriesPage() {
+  const [categories, setCategories] = useState<ESGCategory[]>(FIXED_CATEGORIES);
   const [form, setForm] = useState<ESGCategory>({ id: 0, name: '', description: '' });
   const [editing, setEditing] = useState(false);
 
@@ -43,9 +49,6 @@ export default function CategoriesPage() {
     }
     if (editing) {
       setCategories(categories.map(cat => (cat.id === form.id ? form : cat)));
-    } else {
-      const newId = categories.length ? Math.max(...categories.map(c => c.id)) + 1 : 1;
-      setCategories([...categories, { ...form, id: newId }]);
     }
     setForm({ id: 0, name: '', description: '' });
     setEditing(false);
@@ -57,9 +60,7 @@ export default function CategoriesPage() {
   }
 
   function handleDelete(id: number) {
-    if (confirm('Bạn có chắc muốn xóa danh mục này không?')) {
-      setCategories(categories.filter(cat => cat.id !== id));
-    }
+    alert('Không thể xoá danh mục cố định.');
   }
 
   function handleCancel() {
@@ -70,75 +71,113 @@ export default function CategoriesPage() {
   return (
     <>
       <Head title="Danh mục ESG" />
-      <div className="p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Danh mục ESG
-        </h1>
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Danh mục ESG</h1>
 
-        <div className="bg-white dark:bg-gray-900 shadow rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-6">
-          <p className="text-gray-700 dark:text-gray-300">
-            Trang quản lý các danh mục ESG.
-          </p>
+        {/* Section: Tổng quan chỉ số ESG */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card className="bg-green-50 dark:bg-green-900">
+            <CardHeader>
+              <CardTitle className="text-green-800 dark:text-green-200">Environmental</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-green-900 dark:text-green-100">
+              Các chỉ số về môi trường và phát triển bền vững<br />
+              <span className="font-semibold">Hoạt động:</span> <Badge variant="success">12</Badge>
+            </CardContent>
+          </Card>
 
-          {/* Form thêm/sửa */}
-          <div className="max-w-md space-y-3">
-            <Input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Tên danh mục"
-              required
-              autoFocus
-            />
-            <Textarea
-              name="description"
-              value={form.description || ''}
-              onChange={handleChange}
-              placeholder="Mô tả danh mục (tuỳ chọn)"
-              rows={3}
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleSubmit}>{editing ? 'Cập nhật' : 'Thêm mới'}</Button>
-              {editing && (
-                <Button variant="outline" onClick={handleCancel}>
-                  Hủy
-                </Button>
-              )}
-            </div>
-          </div>
+          <Card className="bg-blue-50 dark:bg-blue-900">
+            <CardHeader>
+              <CardTitle className="text-blue-800 dark:text-blue-200">Social</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-blue-900 dark:text-blue-100">
+              Các yếu tố xã hội và trách nhiệm với cộng đồng<br />
+              <span className="font-semibold">Hoạt động:</span> <Badge variant="info">8</Badge>
+            </CardContent>
+          </Card>
 
-          {/* Bảng danh sách */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Tên danh mục</TableHead>
-                <TableHead>Mô tả</TableHead>
-                <TableHead>Thao tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.map(cat => (
-                <TableRow key={cat.id}>
-                  <TableCell>{cat.id}</TableCell>
-                  <TableCell>{cat.name}</TableCell>
-                  <TableCell>{cat.description || '-'}</TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(cat)}>Sửa</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(cat.id)}>Xóa</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {categories.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                    Không có danh mục nào
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <Card className="bg-purple-50 dark:bg-purple-900">
+            <CardHeader>
+              <CardTitle className="text-purple-800 dark:text-purple-200">Governance</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-purple-900 dark:text-purple-100">
+              Quản trị doanh nghiệp và tuân thủ pháp luật<br />
+              <span className="font-semibold">Hoạt động:</span> <Badge variant="outline">6</Badge>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Danh sách danh mục */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Danh sách danh mục</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Tên danh mục</TableHead>
+                  <TableHead>Mô tả</TableHead>
+                  <TableHead>Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categories.map(cat => (
+                  <TableRow key={cat.id}>
+                    <TableCell>{cat.id}</TableCell>
+                    <TableCell>{cat.name}</TableCell>
+                    <TableCell>{cat.description || '-'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost">
+                            <DotsHorizontalIcon className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(cat)}>Sửa</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(cat.id)} className="text-red-500">
+                            Xoá
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* Form sửa mô tả */}
+        {editing && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Cập nhật mô tả danh mục</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Tên danh mục"
+                readOnly
+              />
+              <Textarea
+                name="description"
+                value={form.description || ''}
+                onChange={handleChange}
+                placeholder="Mô tả danh mục"
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <Button onClick={handleSubmit}>Cập nhật</Button>
+                <Button variant="outline" onClick={handleCancel}>Hủy</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );
