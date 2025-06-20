@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { type BreadcrumbItem } from '@/types';
 import React from 'react';
 
@@ -28,8 +29,8 @@ export default function DocumentCreate() {
     issued_by: '',
     issued_date: '',
     expired_date: '',
+    note: '',
     file: null,
-    notes: '',
   });
 
   const submit = (e: React.FormEvent) => {
@@ -65,8 +66,8 @@ export default function DocumentCreate() {
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-bold">Thêm mới Tài liệu</h1>
 
-        <form onSubmit={submit} className="space-y-6 max-w-5xl">
-          <div className="grid grid-cols-2 gap-6">
+        <form onSubmit={submit} className="space-y-6 max-w-4xl">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="title">Tên tài liệu</Label>
               <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} />
@@ -108,9 +109,9 @@ export default function DocumentCreate() {
               {errors.file && <p className="text-red-600 text-sm">{errors.file}</p>}
             </div>
             <div className="col-span-2">
-              <Label htmlFor="notes">Ghi chú</Label>
-              <textarea id="notes" className="w-full border rounded px-3 py-2" rows={3} value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
-              {errors.notes && <p className="text-red-600 text-sm">{errors.notes}</p>}
+              <Label htmlFor="note">Ghi chú</Label>
+              <Textarea id="note" value={data.note} onChange={(e) => setData('note', e.target.value)} rows={3} />
+              {errors.note && <p className="text-red-600 text-sm">{errors.note}</p>}
             </div>
           </div>
 
