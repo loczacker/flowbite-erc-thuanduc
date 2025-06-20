@@ -1,10 +1,11 @@
-// Full version with Excel import/export, dynamic column widths, file path display, import preview and save/cancel functionality
+// Full version with Excel import/export, print, dynamic column widths, file path display, import preview and save/cancel functionality
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -68,6 +69,7 @@ export default function DataTablePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<keyof EsgDataRow>('id');
   const [sortAsc, setSortAsc] = useState(true);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const dataToDisplay = importData ?? data;
 
@@ -106,6 +108,75 @@ export default function DataTablePage() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ESG');
     XLSX.writeFile(workbook, 'esg_bao_cao.xlsx');
+  };
+
+  const handlePrint = () => {
+    if (!printRef.current) return;
+    const printContent = printRef.current.innerHTML;
+    const printWindow = window.open('', '', 'height=700,width=1000');
+    if (!printWindow) return;
+
+    const today = format(new Date(), 'dd/MM/yyyy HH:mm');
+
+    printWindow.document.write(`
+  <html>
+    <head>
+      <title>Báo cáo ESG</title>
+      <style>
+        body {
+          font-family: 'Open Sans', sans-serif;
+          padding: 40px;
+        }
+        .header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .header img {
+          max-width: 100px;
+          height: auto;
+        }
+        .header-title {
+          font-size: 24px;
+          font-weight: bold;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 24px;
+          font-size: 12px;
+        }
+        th, td {
+          border: 1px solid #ccc;
+          padding: 6px 8px;
+          text-align: left;
+        }
+        th {
+          background-color: #f5f5f5;
+        }
+        .footer {
+          margin-top: 40px;
+          font-size: 12px;
+          text-align: right;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <img src="https://thuanducjsc.vn/wp-content/uploads/2025/04/logoweb.png" alt="Logo" />
+        <div class="header-title">BÁO CÁO ESG</div>
+      </div>
+      ${printContent}
+      <div class="footer">Ngày in: ${today}</div>
+    </body>
+  </html>
+`);
+
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,10 +269,13 @@ export default function DataTablePage() {
               </Button>
             )}
           </div>
-          <Button onClick={handleExportExcel}>Xuất Excel</Button>
+          <div className="flex gap-2">
+            <Button onClick={handleExportExcel}>Xuất Excel</Button>
+            <Button variant="outline" onClick={handlePrint}>In bảng</Button>
+          </div>
         </div>
 
-        <div className="border rounded-xl overflow-auto bg-white shadow p-4">
+        <div ref={printRef} className="border rounded-xl overflow-auto bg-white shadow p-4">
           <Table>
             <TableHeader>
               <TableRow>

@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
-    protected $fillable = ['title', 'file_path']; // ✅ Cho phép tạo nhanh
+    protected $fillable = [
+    'title', 'company', 'factory', 'category',
+    'issued_by', 'issued_date', 'expired_date',
+    'note', 'file_path',
+];
+
 }
