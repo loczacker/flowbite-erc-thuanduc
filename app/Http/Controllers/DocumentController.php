@@ -19,10 +19,8 @@ class DocumentController extends Controller
 
     public function create(): Response
     {
-        $documents = Document::latest()->get();
-
         return Inertia::render('documents/create', [
-            'documents' => $documents,
+            'documents' => Document::latest()->get(),
         ]);
     }
 
@@ -40,7 +38,7 @@ class DocumentController extends Controller
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
         ]);
 
-        $path = $request->file('file')->store('documents');
+        $path = $request->file('file')->store('documents', 'public');
 
         Document::create([
             'title' => $validated['title'],
@@ -55,26 +53,6 @@ class DocumentController extends Controller
         ]);
 
         return redirect()->route('documents.create')->with('message', 'Đã thêm tài liệu thành công!');
-    }
-
-    public function destroy(Document $document)
-    {
-        if ($document->file_path && Storage::exists($document->file_path)) {
-            Storage::delete($document->file_path);
-        }
-
-        $document->delete();
-
-        return redirect()->route('documents.create')->with('message', 'Đã xoá tài liệu.');
-    }
-
-    public function download(Document $document)
-    {
-        if (!$document->file_path || !Storage::exists($document->file_path)) {
-            abort(404, 'Không tìm thấy file');
-        }
-
-        return Storage::download($document->file_path, $document->title . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION));
     }
 
     public function show(Document $document): Response
@@ -105,11 +83,13 @@ class DocumentController extends Controller
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
         ]);
 
+        // Nếu có file mới
         if ($request->hasFile('file')) {
-            if ($document->file_path && Storage::exists($document->file_path)) {
-                Storage::delete($document->file_path);
+            if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
+                Storage::disk('public')->delete($document->file_path);
             }
-            $validated['file_path'] = $request->file('file')->store('documents');
+
+            $validated['file_path'] = $request->file('file')->store('documents', 'public');
         }
 
         $document->update($validated);
@@ -117,21 +97,41 @@ class DocumentController extends Controller
         return redirect()->route('documents.create')->with('message', 'Đã cập nhật tài liệu.');
     }
 
-    public function view(Document $document)
-{
-    $ext = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION));
-    $url = Storage::url($document->file_path); // public url
-    $absoluteUrl = asset($url);
+    public function destroy(Document $document)
+    {
+        if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
+            Storage::disk('public')->delete($document->file_path);
+        }
 
-    if (in_array($ext, ['doc', 'docx', 'xls', 'xlsx'])) {
-        // Microsoft Office Online Viewer
-        $viewerUrl = 'https://view.officeapps.live.com/op/view.aspx?src=' . urlencode($absoluteUrl);
-        return redirect()->away($viewerUrl);
-    } elseif ($ext === 'pdf') {
-        return redirect()->away($absoluteUrl); // PDF: mở trực tiếp
-    } else {
-        return redirect()->route('documents.download', $document); // fallback: tải về
+        $document->delete();
+
+        return redirect()->route('documents.create')->with('message', 'Đã xoá tài liệu.');
     }
-}
 
+    public function download(Document $document)
+    {
+        if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Không tìm thấy file');
+        }
+
+        $filename = $document->title . '.' . pathinfo($document->file_path, PATHINFO_EXTENSION);
+
+        return Storage::disk('public')->download($document->file_path, $filename);
+    }
+
+    public function view(Document $document)
+    {
+        $ext = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION));
+        $url = Storage::disk('public')->url($document->file_path);
+        $absoluteUrl = asset($url);
+
+        if (in_array($ext, ['doc', 'docx', 'xls', 'xlsx'])) {
+            $viewerUrl = 'https://view.officeapps.live.com/op/view.aspx?src=' . urlencode($absoluteUrl);
+            return redirect()->away($viewerUrl);
+        } elseif ($ext === 'pdf') {
+            return redirect()->away($absoluteUrl);
+        }
+
+        return redirect()->route('documents.download', $document);
+    }
 }
