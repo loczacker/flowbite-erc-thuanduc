@@ -16,8 +16,6 @@ Route::prefix('documents')->middleware(['auth', 'verified'])->group(function () 
     Route::get('/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::get('/{document}/view', [DocumentController::class, 'view'])->name('documents.view'); // thêm nếu cần
 
-    Route::get('/manage', [DocumentController::class, 'manage'])->name('documents.manage');
-
 
 });
 

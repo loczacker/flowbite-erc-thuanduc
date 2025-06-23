@@ -25,20 +25,22 @@ class DocumentController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'company' => 'nullable|string|max:255',
-            'factory' => 'nullable|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'issued_by' => 'nullable|string|max:255',
-            'issued_date' => 'nullable|date',
-            'expired_date' => 'nullable|date',
-            'note' => 'nullable|string|max:5000',
-            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
-        ]);
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'company' => 'nullable|string|max:255',
+        'factory' => 'nullable|string|max:255',
+        'category' => 'nullable|string|max:255',
+        'issued_by' => 'nullable|string|max:255',
+        'issued_date' => 'nullable|date',
+        'expired_date' => 'nullable|date',
+        'note' => 'nullable|string|max:5000',
+        'files' => 'required|array',
+        'files.*' => 'file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
+    ]);
 
-        $path = $request->file('file')->store('documents', 'public');
+    foreach ($request->file('files') as $file) {
+        $path = $file->store('documents', 'public');
 
         Document::create([
             'title' => $validated['title'],
@@ -51,9 +53,11 @@ class DocumentController extends Controller
             'note' => $validated['note'],
             'file_path' => $path,
         ]);
-
-        return redirect()->route('documents.create')->with('message', 'Đã thêm tài liệu thành công!');
     }
+
+    return redirect()->route('documents.create')->with('message', 'Đã thêm các tài liệu thành công!');
+}
+
 
     public function show(Document $document): Response
     {
@@ -134,12 +138,5 @@ class DocumentController extends Controller
 
         return redirect()->route('documents.download', $document);
     }
-
-    public function manage(): Response
-{
-    return Inertia::render('documents/manage', [
-        'documents' => Document::latest()->get(),
-    ]);
-}
 
 }

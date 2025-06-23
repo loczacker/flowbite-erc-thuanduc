@@ -15,10 +15,7 @@ import { Label } from '@/components/ui/label';
 import { toast, Toaster } from 'sonner';
 
 export default function DocumentIndex() {
-  const { documents = [], flash } = usePage().props as {
-    documents: (Document & { files?: { id: number }[] })[],
-    flash?: { message?: string }
-  };
+  const { documents = [], flash } = usePage().props as { documents: Document[], flash?: { message?: string } };
 
   const [filters, setFilters] = useState({
     factory: '',
@@ -37,10 +34,6 @@ export default function DocumentIndex() {
 
   const handleEdit = (doc: Document) => {
     router.visit(`/documents/${doc.id}/edit`);
-  };
-
-  const handleView = (doc: Document) => {
-    router.visit(`/documents/${doc.id}`);
   };
 
   const handleDelete = (id: number) => {
@@ -63,7 +56,10 @@ export default function DocumentIndex() {
     );
   });
 
-  const formatDate = (date: string | null) => date ? new Date(date).toLocaleDateString('vi-VN') : '-';
+  const formatDate = (iso: string | null | undefined) => {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('vi-VN');
+  };
 
   return (
     <AppLayout title="Danh sách tài liệu">
@@ -124,33 +120,36 @@ export default function DocumentIndex() {
               </tr>
             </thead>
             <tbody>
-              {filteredDocuments.map((doc, index) => (
-                <tr key={doc.id} className="border-t">
-                  <td className="border p-2 text-center">{index + 1}</td>
-                  <td className="border p-2">{doc.title}</td>
-                  <td className="border p-2">{doc.company || '-'}</td>
-                  <td className="border p-2">{doc.factory || '-'}</td>
-                  <td className="border p-2">{doc.category || '-'}</td>
-                  <td className="border p-2">{doc.issued_by || '-'}</td>
-                  <td className="border p-2">{formatDate(doc.issued_date)}</td>
-                  <td className="border p-2">{formatDate(doc.expired_date)}</td>
-                  <td className="border p-2">{doc.note || '-'}</td>
-                  <td className="border p-2 text-center">{doc.files?.length || 0}</td>
-                  <td className="border p-2">{formatDate(doc.created_at)}</td>
-                  <td className="border p-2 text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost">⋮</Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(doc)}>Xem</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(doc)}>Chỉnh sửa</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(doc.id)}>Xoá</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
+              {filteredDocuments.map((doc, index) => {
+                const createdAt = new Date(doc.created_at).toLocaleString('vi-VN');
+                return (
+                  <tr key={doc.id} className="border-t">
+                    <td className="border p-2 text-center">{index + 1}</td>
+                    <td className="border p-2">{doc.title}</td>
+                    <td className="border p-2">{doc.company || '-'}</td>
+                    <td className="border p-2">{doc.factory || '-'}</td>
+                    <td className="border p-2">{doc.category || '-'}</td>
+                    <td className="border p-2">{doc.issued_by || '-'}</td>
+                    <td className="border p-2">{formatDate(doc.issued_date)}</td>
+                    <td className="border p-2">{formatDate(doc.expired_date)}</td>
+                    <td className="border p-2">{doc.note || '-'}</td>
+                    <td className="border p-2 text-center">{doc.files?.length || 0}</td>
+                    <td className="border p-2">{createdAt}</td>
+                    <td className="border p-2 text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost">⋮</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.visit(`/documents/${doc.id}`)}>Xem</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(doc)}>Chỉnh sửa</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(doc.id)}>Xoá</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </ScrollArea>

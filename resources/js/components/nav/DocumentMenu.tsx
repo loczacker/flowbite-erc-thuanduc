@@ -6,9 +6,8 @@ import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
 const DOCUMENT_MENU_ITEMS = [
-  { title: "Thêm mới tài liệu", href: "/documents/create", icon: FilePlus },
   { title: "Tất cả tài liệu", href: "/documents", icon: FileText },
-  { title: "Quản lý tài liệu", href: "/documents/manage", icon: FilePen },
+  { title: "Thêm mới tài liệu", href: "/documents/create", icon: FilePlus },
 ];
 
 export function DocumentMenu() {

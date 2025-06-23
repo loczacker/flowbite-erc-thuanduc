@@ -1,5 +1,4 @@
-// File: resources/js/Pages/Documents/Create.tsx
-
+import React from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
@@ -7,18 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type BreadcrumbItem } from '@/types';
-import React from 'react';
+import { toast, Toaster } from 'sonner'; // ✅ THÊM
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Tài liệu', href: '/documents' },
   { title: 'Thêm mới', href: '/documents/create' },
 ];
-
-type DocumentItem = {
-  id: number;
-  title: string;
-  file_path: string;
-};
 
 export default function DocumentCreate() {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -30,44 +23,39 @@ export default function DocumentCreate() {
     issued_date: '',
     expired_date: '',
     note: '',
-    file: null,
+    files: [] as File[],
   });
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, value || '');
+      if (key === 'files' && Array.isArray(value)) {
+        value.forEach((file, index) => formData.append(`files[${index}]`, file));
+      } else {
+        formData.append(key, value || '');
+      }
     });
     post('/documents', {
       data: formData,
       forceFormData: true,
-      onSuccess: () => reset(),
+      onSuccess: () => {
+        toast.success('Tài liệu đã được lưu thành công!'); // ✅ TOAST
+        reset();
+      },
     });
-  };
-
-  const { props } = usePage<{
-    message?: string;
-    documents?: DocumentItem[];
-  }>();
-
-  const message = props.message;
-  const documents = props.documents ?? [];
-
-  const handleDelete = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xoá?')) {
-      router.delete(`/documents/${id}`);
-    }
   };
 
   return (
     <>
       <Head title="Thêm mới Tài liệu" />
-      <div className="p-6 space-y-6">
+      <Toaster position="top-right" richColors /> {/* ✅ TOASTER */}
+
+      <div className="px-10 py-6 space-y-6 max-w-[1600px] mx-auto w-full">
         <h1 className="text-2xl font-bold">Thêm mới Tài liệu</h1>
 
-        <form onSubmit={submit} className="space-y-6 max-w-4xl">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={submit} className="space-y-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="title">Tên tài liệu</Label>
               <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} />
@@ -103,60 +91,22 @@ export default function DocumentCreate() {
               <Input type="date" id="expired_date" value={data.expired_date} onChange={(e) => setData('expired_date', e.target.value)} />
               {errors.expired_date && <p className="text-red-600 text-sm">{errors.expired_date}</p>}
             </div>
-            <div>
-              <Label htmlFor="file">Tệp tài liệu</Label>
-              <Input type="file" id="file" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={(e) => setData('file', e.target.files?.[0] || null)} />
-              {errors.file && <p className="text-red-600 text-sm">{errors.file}</p>}
+            <div className="col-span-1 md:col-span-2">
+              <Label htmlFor="files">Tệp tài liệu (chọn nhiều)</Label>
+              <Input multiple type="file" id="files" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={(e) => setData('files', Array.from(e.target.files || []))} />
+              {errors.files && <p className="text-red-600 text-sm">{errors.files}</p>}
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               <Label htmlFor="note">Ghi chú</Label>
               <Textarea id="note" value={data.note} onChange={(e) => setData('note', e.target.value)} rows={3} />
               {errors.note && <p className="text-red-600 text-sm">{errors.note}</p>}
             </div>
           </div>
 
-          <div className="text-center pt-4">
+          <div className="text-center pt-6">
             <Button type="submit" disabled={processing}>Lưu Tài liệu</Button>
           </div>
         </form>
-
-        {message && (
-          <div className="p-4 bg-green-100 border border-green-300 text-green-800 rounded mt-4">
-            {message}
-          </div>
-        )}
-
-        {documents.length > 0 && (
-          <div className="mt-10">
-            <h2 className="text-xl font-semibold mb-4">Danh sách Tài liệu</h2>
-            <table className="w-full table-auto border-collapse border border-gray-300">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border p-2">#</th>
-                  <th className="border p-2 text-left">Tên</th>
-                  <th className="border p-2 text-left">Tệp</th>
-                  <th className="border p-2">Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {documents.map((doc, index) => (
-                  <tr key={doc.id} className="border-t">
-                    <td className="border p-2 text-center">{index + 1}</td>
-                    <td className="border p-2">{doc.title}</td>
-                    <td className="border p-2 break-all text-blue-700 underline">
-                      <a href={`/documents/${doc.id}/download`} target="_blank" rel="noopener noreferrer">
-                        Xem tệp
-                      </a>
-                    </td>
-                    <td className="border p-2 text-center">
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(doc.id)}>Xoá</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </>
   );
