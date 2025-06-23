@@ -134,4 +134,12 @@ class DocumentController extends Controller
 
         return redirect()->route('documents.download', $document);
     }
+
+    public function manage(): Response
+{
+    return Inertia::render('documents/manage', [
+        'documents' => Document::latest()->get(),
+    ]);
+}
+
 }

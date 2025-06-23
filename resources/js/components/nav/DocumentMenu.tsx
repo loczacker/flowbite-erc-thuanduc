@@ -8,19 +8,20 @@ import clsx from 'clsx';
 const DOCUMENT_MENU_ITEMS = [
   { title: "Thêm mới tài liệu", href: "/documents/create", icon: FilePlus },
   { title: "Tất cả tài liệu", href: "/documents", icon: FileText },
-  { title: "Sửa tài liệu", href: "/documents/edit", icon: FilePen },
+  { title: "Quản lý tài liệu", href: "/documents/manage", icon: FilePen },
 ];
 
 export function DocumentMenu() {
   const page = usePage();
+  const currentUrl = page.url;
 
-  const [isOpen, setIsOpen] = useState(() => page.url.startsWith('/documents'));
+  const [isOpen, setIsOpen] = useState(() => currentUrl.startsWith('/documents'));
 
   useEffect(() => {
-    if (page.url.startsWith('/documents')) {
+    if (currentUrl.startsWith('/documents')) {
       setIsOpen(true);
     }
-  }, [page.url]);
+  }, [currentUrl]);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -39,16 +40,20 @@ export function DocumentMenu() {
 
       <CollapsibleContent>
         <SidebarMenu>
-          {DOCUMENT_MENU_ITEMS.map(({ title, href, icon: Icon }) => (
-            <SidebarMenuItem key={href}>
-              <SidebarMenuButton asChild isActive={page.url === href}>
-                <Link href={href} prefetch className="flex items-center gap-2">
-                  <Icon size={16} />
-                  <span>{title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {DOCUMENT_MENU_ITEMS.map(({ title, href, icon: Icon }) => {
+            const isActive = currentUrl === href || currentUrl.startsWith(href + '/');
+
+            return (
+              <SidebarMenuItem key={href}>
+                <SidebarMenuButton asChild isActive={isActive}>
+                  <Link href={href} prefetch className="flex items-center gap-2">
+                    <Icon size={16} />
+                    <span>{title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </CollapsibleContent>
     </Collapsible>
