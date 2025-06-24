@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import { type Document } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +15,7 @@ import { toast, Toaster } from 'sonner';
 
 export default function DocumentIndex() {
   const { documents = [], flash } = usePage().props as {
-    documents: (Document & { files?: { id: number }[] })[],
+    documents: (Document & { files_count?: number })[],
     flash?: { message?: string }
   };
 
@@ -135,7 +134,7 @@ export default function DocumentIndex() {
                   <td className="border p-2">{formatDate(doc.issued_date)}</td>
                   <td className="border p-2">{formatDate(doc.expired_date)}</td>
                   <td className="border p-2">{doc.note || '-'}</td>
-                  <td className="border p-2 text-center">{doc.files?.length || 0}</td>
+                  <td className="border p-2 text-center">{doc.files_count ?? 0}</td>
                   <td className="border p-2">{formatDate(doc.created_at)}</td>
                   <td className="border p-2 text-center">
                     <DropdownMenu>

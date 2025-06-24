@@ -1,158 +1,162 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { type Document } from '@/types';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { toast, Toaster } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
+import { type BreadcrumbItem, type Document, type DocumentFile } from '@/types';
+import { Toaster, toast } from 'sonner';
 
-export default function DocumentIndex() {
-  const { documents = [], flash } = usePage().props as { documents: Document[], flash?: { message?: string } };
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Tài liệu', href: '/documents' },
+  { title: 'Chỉnh sửa', href: '' },
+];
 
-  const [filters, setFilters] = useState({
-    factory: '',
-    category: '',
-    title: '',
-    issued_by: '',
-    issued_from: '',
-    expired_to: '',
-  });
-
-  useEffect(() => {
-    if (flash?.message) {
-      toast.success(flash.message);
-    }
-  }, [flash]);
-
-  const handleEdit = (doc: Document) => {
-    router.visit(`/documents/${doc.id}/edit`);
+export default function DocumentEdit() {
+  const { document } = usePage().props as {
+    document: Document & { files: DocumentFile[] }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xoá tài liệu này?')) {
-      router.delete(`/documents/${id}`);
+  const { data, setData, post, processing, errors, reset } = useForm({
+    _method: 'put',
+    title: document.title || '',
+    company: document.company || '',
+    factory: document.factory || '',
+    category: document.category || '',
+    issued_by: document.issued_by || '',
+    issued_date: document.issued_date || '',
+    expired_date: document.expired_date || '',
+    note: document.note || '',
+    newFiles: [] as File[],
+    deletedFileIds: [] as number[],
+  });
+
+  const handleDeleteFile = (fileId: number) => {
+    setData('deletedFileIds', [...data.deletedFileIds, fileId]);
+    toast.info('Tệp sẽ bị xoá sau khi lưu.');
+  };
+
+  const previewFile = (file: DocumentFile) => {
+    const ext = file.file_name?.split('.').pop()?.toLowerCase();
+    const fileUrl = route('document_files.download', file.id);
+
+    if (ext === 'pdf') {
+      window.open(fileUrl, '_blank');
+    } else {
+      toast.warning('Chỉ hỗ trợ xem trước file PDF!');
     }
   };
 
-  const filteredDocuments = documents.filter((doc) => {
-    const issuedMatch = !filters.issued_from || (doc.issued_date && doc.issued_date >= filters.issued_from);
-    const expiredMatch = !filters.expired_to || (doc.expired_date && doc.expired_date <= filters.expired_to);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
 
-    return (
-      (!filters.factory || doc.factory?.toLowerCase().includes(filters.factory.toLowerCase())) &&
-      (!filters.category || doc.category?.toLowerCase().includes(filters.category.toLowerCase())) &&
-      (!filters.title || doc.title?.toLowerCase().includes(filters.title.toLowerCase())) &&
-      (!filters.issued_by || doc.issued_by?.toLowerCase().includes(filters.issued_by.toLowerCase())) &&
-      issuedMatch &&
-      expiredMatch
-    );
-  });
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'newFiles') {
+        value.forEach((file, i) => formData.append(`newFiles[${i}]`, file));
+      } else if (key === 'deletedFileIds') {
+        value.forEach((id, i) => formData.append(`deletedFileIds[${i}]`, id.toString()));
+      } else {
+        formData.append(key, value || '');
+      }
+    });
 
-  const formatDate = (iso: string | null | undefined) => {
-    if (!iso) return '-';
-    return new Date(iso).toLocaleDateString('vi-VN');
+    post(route('documents.update', document.id), {
+      data: formData,
+      forceFormData: true,
+      onSuccess: () => toast.success('Cập nhật tài liệu thành công!'),
+      onError: () => toast.error('Có lỗi xảy ra khi cập nhật.'),
+    });
   };
 
   return (
-    <AppLayout title="Danh sách tài liệu">
-      <Head title="Tài liệu" />
+    <AppLayout title={`Chỉnh sửa: ${document.title}`} breadcrumbs={breadcrumbs}>
+      <Head title={`Chỉnh sửa Tài liệu`} />
       <Toaster position="top-right" richColors />
 
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Danh sách Tài liệu</h1>
-          <Link href="/documents/create">
-            <Button>Thêm tài liệu</Button>
-          </Link>
-        </div>
+      <div className="px-10 py-6 space-y-6 max-w-[1600px] mx-auto w-full">
+        <h1 className="text-2xl font-bold">Chỉnh sửa Tài liệu</h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded border">
-          <div>
-            <Label>Nhà máy</Label>
-            <Input value={filters.factory} onChange={(e) => setFilters({ ...filters, factory: e.target.value })} />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="title">Tên tài liệu</Label>
+              <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} />
+              {errors.title && <p className="text-red-600 text-sm">{errors.title}</p>}
+            </div>
+            <div>
+              <Label htmlFor="company">Công ty</Label>
+              <Input id="company" value={data.company} onChange={(e) => setData('company', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="factory">Nhà máy</Label>
+              <Input id="factory" value={data.factory} onChange={(e) => setData('factory', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="category">Lĩnh vực</Label>
+              <Input id="category" value={data.category} onChange={(e) => setData('category', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="issued_by">Cơ quan cấp</Label>
+              <Input id="issued_by" value={data.issued_by} onChange={(e) => setData('issued_by', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="issued_date">Ngày cấp</Label>
+              <Input type="date" id="issued_date" value={data.issued_date} onChange={(e) => setData('issued_date', e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="expired_date">Ngày hết hiệu lực</Label>
+              <Input type="date" id="expired_date" value={data.expired_date} onChange={(e) => setData('expired_date', e.target.value)} />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <Label htmlFor="note">Ghi chú</Label>
+              <Textarea id="note" value={data.note} onChange={(e) => setData('note', e.target.value)} rows={3} />
+            </div>
           </div>
-          <div>
-            <Label>Lĩnh vực</Label>
-            <Input value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })} />
-          </div>
-          <div>
-            <Label>Tên tài liệu</Label>
-            <Input value={filters.title} onChange={(e) => setFilters({ ...filters, title: e.target.value })} />
-          </div>
-          <div>
-            <Label>Cơ quan cấp</Label>
-            <Input value={filters.issued_by} onChange={(e) => setFilters({ ...filters, issued_by: e.target.value })} />
-          </div>
-          <div>
-            <Label>Hiệu lực từ</Label>
-            <Input type="date" value={filters.issued_from} onChange={(e) => setFilters({ ...filters, issued_from: e.target.value })} />
-          </div>
-          <div>
-            <Label>Hết hiệu lực đến</Label>
-            <Input type="date" value={filters.expired_to} onChange={(e) => setFilters({ ...filters, expired_to: e.target.value })} />
-          </div>
-        </div>
 
-        <ScrollArea className="w-full overflow-auto">
-          <table className="w-full table-auto border border-gray-200 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border p-2">#</th>
-                <th className="border p-2 text-left">Tên</th>
-                <th className="border p-2 text-left">Công ty</th>
-                <th className="border p-2 text-left">Nhà máy</th>
-                <th className="border p-2 text-left">Lĩnh vực</th>
-                <th className="border p-2 text-left">Cơ quan cấp</th>
-                <th className="border p-2 text-left">Ngày cấp</th>
-                <th className="border p-2 text-left">Ngày hết hiệu lực</th>
-                <th className="border p-2 text-left">Ghi chú</th>
-                <th className="border p-2 text-left">Số file</th>
-                <th className="border p-2 text-left">Ngày tạo</th>
-                <th className="border p-2 text-center">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocuments.map((doc, index) => {
-                const createdAt = new Date(doc.created_at).toLocaleString('vi-VN');
-                return (
-                  <tr key={doc.id} className="border-t">
-                    <td className="border p-2 text-center">{index + 1}</td>
-                    <td className="border p-2">{doc.title}</td>
-                    <td className="border p-2">{doc.company || '-'}</td>
-                    <td className="border p-2">{doc.factory || '-'}</td>
-                    <td className="border p-2">{doc.category || '-'}</td>
-                    <td className="border p-2">{doc.issued_by || '-'}</td>
-                    <td className="border p-2">{formatDate(doc.issued_date)}</td>
-                    <td className="border p-2">{formatDate(doc.expired_date)}</td>
-                    <td className="border p-2">{doc.note || '-'}</td>
-                    <td className="border p-2 text-center">{doc.files?.length || 0}</td>
-                    <td className="border p-2">{createdAt}</td>
-                    <td className="border p-2 text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost">⋮</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.visit(`/documents/${doc.id}`)}>Xem</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(doc)}>Chỉnh sửa</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(doc.id)}>Xoá</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </ScrollArea>
+          <div>
+            <Label className="block mb-2">Tài liệu hiện tại</Label>
+            {document.files.map((file) =>
+              !data.deletedFileIds.includes(file.id) && (
+                <div key={file.id} className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
+                  <span>{file.file_name}</span>
+                  <div className="space-x-2">
+                    <Button size="sm" variant="outline" type="button" onClick={() => previewFile(file)}>Xem</Button>
+                    <Button size="sm" variant="secondary" type="button" onClick={() => window.open(route('document_files.download', file.id), '_blank')}>Tải</Button>
+                    <Button size="sm" variant="destructive" type="button" onClick={() => handleDeleteFile(file.id)}>Xoá</Button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="newFiles">Thêm tệp mới</Label>
+            <div
+              className="p-4 border-2 border-dashed rounded bg-white"
+              onDrop={(e) => {
+                e.preventDefault();
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                setData('newFiles', [...data.newFiles, ...droppedFiles]);
+                toast.success(`Đã thêm ${droppedFiles.length} tệp`);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              <Input
+                multiple
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                onChange={(e) => setData('newFiles', Array.from(e.target.files || []))}
+              />
+              <p className="text-sm text-gray-500 mt-2">Kéo thả hoặc chọn nhiều file</p>
+            </div>
+          </div>
+
+          <div className="text-center pt-6">
+            <Button type="submit" disabled={processing}>Lưu thay đổi</Button>
+          </div>
+        </form>
       </div>
     </AppLayout>
   );
