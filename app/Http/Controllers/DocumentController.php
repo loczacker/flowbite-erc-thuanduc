@@ -68,14 +68,14 @@ class DocumentController extends Controller
 
 
 
-    public function show(Document $document): Response
+    public function show(Document $document)
 {
-    $document->load('files'); // ⚠️ cần có quan hệ files
-
+    $document->load('files'); // Phải có load('files') nếu bạn cần danh sách file
     return Inertia::render('documents/show', [
         'document' => $document,
     ]);
 }
+
 
 
     public function edit(Document $document)

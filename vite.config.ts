@@ -14,6 +14,14 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    server: {
+        host: '192.168.16.86', // 👈 Địa chỉ IP LAN của bạn
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: '192.168.16.86',
+        },
+    },
     esbuild: {
         jsx: 'automatic',
     },

@@ -33,6 +33,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     if ($file->document_id !== $document->id) abort(403);
     Storage::disk('public')->delete($file->file_path);
     $file->delete();
-    return back()->with('message', 'Đã xoá tệp thành công');
-});
+    return back()->with('message', 'Đã xoá tệp thành công!');
+})->name('document_files.destroy');
+
+    Route::get('/documents/view-file/{file}', function (App\Models\DocumentFile $file) {
+    return redirect()->away(Storage::disk('public')->url($file->file_path));
+})->name('document_files.preview');
+
+
 });

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { type BreadcrumbItem, type Document, type DocumentFile } from '@/types';
 import { Toaster, toast } from 'sonner';
+import { type BreadcrumbItem, type Document, type DocumentFile } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Tài liệu', href: '/documents' },
@@ -15,10 +15,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function DocumentEdit() {
   const { document } = usePage().props as {
-    document: Document & { files: DocumentFile[] }
+    document: Document & { files: DocumentFile[] };
   };
 
-  const { data, setData, post, processing, errors, reset } = useForm({
+  const { data, setData, post, processing, errors } = useForm({
     _method: 'put',
     title: document.title || '',
     company: document.company || '',
@@ -31,22 +31,6 @@ export default function DocumentEdit() {
     newFiles: [] as File[],
     deletedFileIds: [] as number[],
   });
-
-  const handleDeleteFile = (fileId: number) => {
-    setData('deletedFileIds', [...data.deletedFileIds, fileId]);
-    toast.info('Tệp sẽ bị xoá sau khi lưu.');
-  };
-
-  const previewFile = (file: DocumentFile) => {
-    const ext = file.file_name?.split('.').pop()?.toLowerCase();
-    const fileUrl = route('document_files.download', file.id);
-
-    if (ext === 'pdf') {
-      window.open(fileUrl, '_blank');
-    } else {
-      toast.warning('Chỉ hỗ trợ xem trước file PDF!');
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,9 +54,35 @@ export default function DocumentEdit() {
     });
   };
 
+  const handleDeleteFile = (fileId: number) => {
+    if (!confirm('Bạn có chắc muốn xoá tệp này?')) return;
+
+    router.delete(route('document_files.destroy', { document: document.id, file: fileId }), {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast.success('Đã xoá tệp thành công!');
+        location.reload(); // Reload lại danh sách file
+      },
+      onError: () => {
+        toast.error('Xoá tệp thất bại!');
+      },
+    });
+  };
+
+  const previewFile = (file: DocumentFile) => {
+    const ext = file.file_name?.split('.').pop()?.toLowerCase();
+    const fileUrl = route('document_files.download', file.id);
+    if (ext === 'pdf') {
+      toast.success('Đang xem trước tệp PDF');
+      window.open(fileUrl, '_blank');
+    } else {
+      toast.warning('Chỉ hỗ trợ xem trước file PDF!');
+    }
+  };
+
   return (
     <AppLayout title={`Chỉnh sửa: ${document.title}`} breadcrumbs={breadcrumbs}>
-      <Head title={`Chỉnh sửa Tài liệu`} />
+      <Head title="Chỉnh sửa Tài liệu" />
       <Toaster position="top-right" richColors />
 
       <div className="px-10 py-6 space-y-6 max-w-[1600px] mx-auto w-full">
@@ -117,18 +127,19 @@ export default function DocumentEdit() {
 
           <div>
             <Label className="block mb-2">Tài liệu hiện tại</Label>
-            {document.files.map((file) =>
-              !data.deletedFileIds.includes(file.id) && (
-                <div key={file.id} className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
-                  <span>{file.file_name}</span>
-                  <div className="space-x-2">
-                    <Button size="sm" variant="outline" type="button" onClick={() => previewFile(file)}>Xem</Button>
-                    <Button size="sm" variant="secondary" type="button" onClick={() => window.open(route('document_files.download', file.id), '_blank')}>Tải</Button>
-                    <Button size="sm" variant="destructive" type="button" onClick={() => handleDeleteFile(file.id)}>Xoá</Button>
-                  </div>
+            {document.files.map((file) => (
+              <div key={file.id} className="flex justify-between items-center bg-gray-100 p-2 rounded mb-2">
+                <span>{file.file_name}</span>
+                <div className="space-x-2">
+                  <Button type="button" size="sm" variant="outline" onClick={() => previewFile(file)}>Xem</Button>
+                  <Button type="button" size="sm" variant="secondary" onClick={() => {
+                    toast.success('Đang tải xuống...');
+                    window.open(route('document_files.download', file.id), '_blank');
+                  }}>Tải</Button>
+                  <Button type="button" size="sm" variant="destructive" onClick={() => handleDeleteFile(file.id)}>Xoá</Button>
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
 
           <div>
@@ -137,15 +148,15 @@ export default function DocumentEdit() {
               className="p-4 border-2 border-dashed rounded bg-white"
               onDrop={(e) => {
                 e.preventDefault();
-                const droppedFiles = Array.from(e.dataTransfer.files);
-                setData('newFiles', [...data.newFiles, ...droppedFiles]);
-                toast.success(`Đã thêm ${droppedFiles.length} tệp`);
+                const dropped = Array.from(e.dataTransfer.files);
+                setData('newFiles', [...data.newFiles, ...dropped]);
+                toast.success(`Đã thêm ${dropped.length} tệp`);
               }}
               onDragOver={(e) => e.preventDefault()}
             >
               <Input
-                multiple
                 type="file"
+                multiple
                 accept=".pdf,.doc,.docx,.xls,.xlsx"
                 onChange={(e) => setData('newFiles', Array.from(e.target.files || []))}
               />
