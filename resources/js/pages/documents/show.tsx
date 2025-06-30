@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Toaster, toast } from 'sonner';
 import { type BreadcrumbItem, type Document, type DocumentFile } from '@/types';
 
@@ -48,7 +48,7 @@ export default function DocumentShow() {
     } else {
       toast.success('Đang mở bằng Google Docs...', { duration: 3000 });
       window.open(
-        `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`,
+        `https://docs.google.com/viewer?url=${encodeURIComponent(f  ileUrl)}&embedded=true`,
         '_blank'
       );
     }
@@ -58,8 +58,8 @@ export default function DocumentShow() {
     const downloadUrl = getDownloadUrl(file.id);
     toast.loading('Đang tải xuống...', { id: `download-${file.id}` });
 
-    const newTab = window.open(downloadUrl, '_blank');
-    if (newTab) {
+    const win = window.open(downloadUrl, '_blank');
+    if (win) {
       setTimeout(() => {
         toast.success('Tải xuống thành công', {
           id: `download-${file.id}`,
@@ -83,7 +83,9 @@ export default function DocumentShow() {
         <div className="max-w-screen-lg mx-auto space-y-6 bg-white shadow rounded-xl p-6 border border-gray-200">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">Chi tiết Tài liệu</h1>
-            <Button variant="outline" onClick={() => router.visit('/documents')}>Quay lại</Button>
+            <Button variant="outline" onClick={() => router.visit('/documents')}>
+              Quay lại
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
@@ -98,38 +100,49 @@ export default function DocumentShow() {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-base font-semibold">Danh sách tệp ({document.files.length})</h2>
+  <h2 className="text-base font-semibold">Danh sách tệp ({document.files.length})</h2>
 
-            {document.files.length === 0 ? (
-              <p className="text-gray-500 italic text-sm">Không có tệp đính kèm.</p>
-            ) : (
-              <ScrollArea className="max-h-72 border rounded-md">
-                <ul className="divide-y">
-                  {document.files.map((file) => {
-                    const ext = file.file_name?.split('.').pop()?.toLowerCase() || 'file';
-                    return (
-                      <li key={file.id} className="flex justify-between items-center px-4 py-3 text-sm hover:bg-gray-50 transition">
-                        <div className="flex items-center gap-3">
-                          <Badge className={fileBadgeColor(ext)}>{ext}</Badge>
-                          <span className="truncate max-w-[300px]">{file.file_name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handlePreview(file)}>Xem</Button>
-                          <Button size="sm" variant="secondary" onClick={() => handleDownload(file)}>Tải</Button>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </ScrollArea>
-            )}
-          </div>
+  {document.files.length === 0 ? (
+    <p className="text-gray-500 italic text-sm">Không có tệp đính kèm.</p>
+  ) : (
+    <ScrollArea className="h-[320px] border rounded-md">
+      <div className="p-2">
+        <ul className="divide-y">
+          {document.files.map((file) => {
+            const ext = file.file_name?.split('.').pop()?.toLowerCase() || 'file';
+            return (
+              <li
+                key={file.id}
+                className="flex justify-between items-center px-4 py-3 text-sm hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge className={fileBadgeColor(ext)}>{ext}</Badge>
+                  <span className="truncate max-w-[300px]">{file.file_name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handlePreview(file)}>
+                    Xem
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => handleDownload(file)}>
+                    Tải
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </ScrollArea>
+  )}
+</div>
+
         </div>
       </div>
 
       {/* Modal xem PDF */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="w-full max-w-5xl h-[90vh] p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Xem tài liệu PDF</DialogTitle>
           {previewUrl && (
             <iframe src={previewUrl} className="w-full h-full" title="PDF Preview" />
           )}
